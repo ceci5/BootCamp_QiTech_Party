@@ -24,7 +24,17 @@ class ClientRepository:
         self.session = context.db_session
 
     def get_by_key(self, client_key: str) -> Client:
-        return self.session.query(Client).filter(Client.client_key == client_key).first()
+        """O cliente desta chave, ou None.
+
+        Mesmo cuidado do PartyRepository.get_by_key: a coluna é CHAR(36), e
+        o CHAR ignora espaços no fim ao comparar. A conferência exata é aqui.
+        """
+        client = self.session.query(Client).filter(Client.client_key == client_key).first()
+
+        if client is not None and client.client_key != client_key:
+            return None
+
+        return client
 
     def create(self, party: Party, client_data: dict) -> Optional[Client]:
         """O cliente, ligado à parte, com o preço que a plataforma cobra dela.

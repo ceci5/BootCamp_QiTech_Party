@@ -1,3 +1,5 @@
+import pytest
+
 from tests.utils import RequestGenerator
 
 
@@ -30,3 +32,15 @@ class TestClientGet:
         assert set(response.keys()) == ERROR_FIELDS
         assert response["code"] == "QIT002005"
         assert NOT_FOUND_CLIENT_KEY in response["description"]
+
+    @pytest.mark.parametrize("suffix", [" ", "  "], ids=["um_espaco", "dois_espacos"])
+    def test_get_client_chave_com_espaco_no_fim_devolve_404(self, suffix):
+        """Mesmo caso do GET /parties/{key}: a coluna é CHAR(36), e sem a
+        conferência exata a plataforma respondia 200 (revisão de 2026-10-11)."""
+        client_key = PLATFORM_CLIENT_KEY + suffix
+
+        status, response = RequestGenerator.GET_client(client_key)
+
+        assert status == 404
+        assert set(response.keys()) == ERROR_FIELDS
+        assert response["code"] == "QIT002005"
