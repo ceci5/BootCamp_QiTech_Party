@@ -1,6 +1,7 @@
 import logging
 import re
 import sys
+from urllib.parse import unquote
 
 from constants import APP_ENV, SERVICE_NAME
 from utils.request_context import get_request_id
@@ -35,16 +36,30 @@ class RequestIdFilter(logging.Filter):
         return True
 
 
+# Um dígito, escrito como dígito ou em percent-encoding (%30 a %39): a
+# query string vai ao log como veio, e "1234567890%39" é o mesmo documento
+# que a API busca depois de decodificar (revisão de 2026-10-11).
+DIGIT = r"(?:[0-9]|%3[0-9])"
+
 # Um CPF (11 dígitos) ou um CNPJ (14) solto na linha: nem colado a outro
-# dígito antes, nem depois. O primeiro grupo é o que some; o segundo, os dois
+# dígito antes, nem depois (nem logo depois de um "%", que começaria um
+# dígito codificado). O primeiro grupo é o que some; o segundo, os dois
 # últimos dígitos, fica. Com 11 dígitos casa 9 + 2; com 14, o 9 + 2 esbarra
 # no dígito seguinte e o regex tenta 12 + 2.
-DOCUMENT_NUMBER_PATTERN = re.compile(r"(?<![0-9])([0-9]{9}|[0-9]{12})([0-9]{2})(?![0-9])")
+DOCUMENT_NUMBER_PATTERN = re.compile(
+    rf"(?<![0-9%])((?:{DIGIT}){{9}}|(?:{DIGIT}){{12}})((?:{DIGIT}){{2}})(?!{DIGIT})"
+)
 
 
 def mask_document_numbers(text: str) -> str:
-    """Troca cada dígito escondido por `*`: 12345678909 vira *********09."""
-    return DOCUMENT_NUMBER_PATTERN.sub(lambda match: "*" * len(match.group(1)) + match.group(2), text)
+    """Troca cada dígito escondido por `*`: 12345678909 vira *********09.
+
+    Um dígito codificado vira um `*` só, e os dois que ficam saem
+    decodificados: 1234567890%39 vira *********09, como a forma comum.
+    """
+    return DOCUMENT_NUMBER_PATTERN.sub(
+        lambda match: "*" * len(re.findall(DIGIT, match.group(1))) + unquote(match.group(2)), text
+    )
 
 
 class DocumentMaskFilter(logging.Filter):
