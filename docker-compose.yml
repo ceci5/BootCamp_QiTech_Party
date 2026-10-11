@@ -42,6 +42,13 @@ services:
       BANKSLIP_API_URL: ${BANKSLIP_API_URL:-http://localhost:8080}
       BANKSLIP_API_INTERNAL_TOKEN: ${BANKSLIP_API_INTERNAL_TOKEN:-default_token}
       BANKSLIP_API_TIMEOUT: ${BANKSLIP_API_TIMEOUT:-5}
+      # O bureau de verificacao, mock WireMock neste compose. Acrescimo
+      # da party-api; as quatro linhas estao no guia da party-api, §14.
+      BUREAU_API_URL: ${BUREAU_API_URL:-http://bureau-mock:8080}
+      BUREAU_API_INTERNAL_TOKEN: ${BUREAU_API_INTERNAL_TOKEN:-default_token}
+      BUREAU_API_TIMEOUT: ${BUREAU_API_TIMEOUT:-3}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       # Monta o codigo pra dentro do container: salvou o arquivo,
       # a API recarrega sozinha (o --reload ali embaixo).
