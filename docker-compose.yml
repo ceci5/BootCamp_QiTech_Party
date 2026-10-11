@@ -85,3 +85,8 @@ services:
       timeout: 3s
       retries: 20
 
+  # Mock do bureau, so para teste. Acrescimo: a base nao e alterada.
+  bureau-mock:
+    image: wiremock/wiremock:3.9.1
+    ports: ["8081:8080"]
+    volumes: ["./tests/mocks/bureau:/home/wiremock"]
