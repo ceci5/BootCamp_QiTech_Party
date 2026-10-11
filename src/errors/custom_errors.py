@@ -222,3 +222,22 @@ class PartyAlreadyClient(QIException):
         description = f"Party with key {party_key} is already a client."
         translation = f"A parte com chave {party_key} já é cliente."
         super().__init__(title, self.code, http_status, description, translation)
+
+
+class PartyNotVerifiable(QIException):
+    """A repescagem só vale para a parte pending (guia §5).
+
+    409: conflito com o estado em que a parte está. rejected é terminal
+    (D0010) e active não volta (06 §2.1): perguntar de novo ao bureau não
+    mudaria nada. A descrição leva a chave e o estado, nunca nome nem
+    documento (D0008).
+    """
+
+    code = "QIT002004"
+
+    def __init__(self, party_key, status) -> None:
+        title = "Party cannot be verified"
+        http_status = 409
+        description = f"Party with key {party_key} is {status}, not pending."
+        translation = f"A parte com chave {party_key} não está pendente de verificação."
+        super().__init__(title, self.code, http_status, description, translation)

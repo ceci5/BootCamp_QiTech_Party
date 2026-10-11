@@ -33,11 +33,12 @@ class RandomGenerator:
     # Documentos SÓ DÍGITOS, para a party-api (spec 03, sumário L16)
     # ────────────────────────────────────────────────────────────────
     # O bureau mockado decide pelo final do documento: 00 recusa, 99 fica
-    # fora do ar, 98 falha uma vez. Um sorteio comum que caísse num desses
+    # fora do ar, 98 falha uma vez e aprova, 97 falha uma vez e recusa
+    # (spec 06). Um sorteio comum que caísse num desses
     # finais mudaria o desfecho do teste ~1 vez em 100 — por isso, sem
     # `ending`, eles são sorteados de novo. Com `ending`, o sorteio repete
     # até o documento terminar exatamente nele.
-    RESERVED_ENDINGS = ("00", "98", "99")
+    RESERVED_ENDINGS = ("00", "97", "98", "99")
 
     # A parte da plataforma, semeada no database.sql: um POST com este CNPJ
     # bateria na UNIQUE e daria 409 por acaso.

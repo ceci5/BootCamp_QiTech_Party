@@ -46,5 +46,22 @@ class TestBureauVerifications:
             assert status == 200
             assert response == {"result": "approved"}
 
-    def test_verifications_mock_carrega_os_cinco_mappings(self):
-        assert BureauMock.mappings_total() == 5
+    def test_verifications_final_97_falha_uma_vez_e_recusa(self):
+        """O par do 98 para a recusa (spec 06, P1): falha uma vez e depois recusa.
+
+        Scenario proprio (bureau-instavel-recusa), para nao dividir estado
+        com o 98; o mesmo reset zera os dois.
+        """
+        assert BureauMock.reset_scenarios() == 200
+
+        status, response = BureauMock.POST_verifications("12345678997", timeout=TEST_TIMEOUT)
+        assert status is None
+
+        for _ in range(2):
+            status, response = BureauMock.POST_verifications("12345678997", timeout=TEST_TIMEOUT)
+            assert status == 200
+            assert response == {"result": "rejected"}
+
+    def test_verifications_mock_carrega_os_sete_mappings(self):
+        """Padrao, 00, 99, os dois do 98 e os dois do 97 (spec 02, emenda de 2026-10-11)."""
+        assert BureauMock.mappings_total() == 7

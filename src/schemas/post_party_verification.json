@@ -1,0 +1,15 @@
+{
+  "title": "PostPartyVerification",
+  "type": "object",
+  "properties": {
+    "actor": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    }
+  },
+  "required": [
+    "actor"
+  ],
+  "additionalProperties": false
+}

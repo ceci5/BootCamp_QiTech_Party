@@ -25,6 +25,18 @@ class PartyResource:
             status_code=http_status.HTTP_201_CREATED,
         )
 
+    @SchemaHandler.validate("post_party_verification.json")
+    def on_post_verification(self, party_key: str, payload: dict) -> JSONResponse:
+        # 200, e não 201: nada é criado. A resposta traz o estado depois da
+        # tentativa, inclusive se continuou pending (guia §5).
+        controller = PartyController()
+        party = controller.verify(party_key, payload["actor"])
+
+        return JSONResponse(
+            content=jsonable_encoder(party),
+            status_code=http_status.HTTP_200_OK,
+        )
+
     def on_get_by_key(self, party_key: str) -> JSONResponse:
         controller = PartyController()
         party = controller.get_by_key(party_key)

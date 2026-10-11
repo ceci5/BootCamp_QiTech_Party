@@ -118,3 +118,32 @@ class RequestGenerator:
         headers = {"INTERNAL-TOKEN": INTERNAL_TOKEN, "X-Request-ID": request_id}
         response = ClientRequisition.send("GET", f"/clients/{client_key}", headers=headers)
         return response.response_status, response.response_json, response.response.headers.get("X-Request-ID")
+
+    @staticmethod
+    def POST_party_verification(party_key: str, verification_payload: dict) -> BaseConnectorResponse:
+        """Repescagem do bureau (spec 06). Com `verification_payload=None`, vai sem corpo."""
+        response = ClientRequisition.send(
+            "POST",
+            f"/parties/{party_key}/verification",
+            payload=verification_payload,
+            headers={"INTERNAL-TOKEN": INTERNAL_TOKEN},
+        )
+        return response.response_status, response.response_json
+
+    @staticmethod
+    def POST_party_verification_with_request_id(
+        party_key: str, verification_payload: dict, request_id: str = None
+    ) -> tuple:
+        """Como o POST_party_verification, devolvendo também o X-Request-ID DA RESPOSTA.
+
+        É o número que tem de aparecer no trace_id do evento da repescagem e
+        no bureau (spec 06, CA-02). Se `request_id` vier, vai no cabeçalho.
+        """
+        headers = {"INTERNAL-TOKEN": INTERNAL_TOKEN}
+        if request_id is not None:
+            headers["X-Request-ID"] = request_id
+
+        response = ClientRequisition.send(
+            "POST", f"/parties/{party_key}/verification", payload=verification_payload, headers=headers
+        )
+        return response.response_status, response.response_json, response.response.headers.get("X-Request-ID")

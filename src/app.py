@@ -172,6 +172,11 @@ def create_app() -> FastAPI:
         party_resource.on_get_by_key,
         methods=["GET"],
     )
+    application.add_api_route(
+        "/parties/{party_key}/verification",
+        party_resource.on_post_verification,
+        methods=["POST"],
+    )
 
     application.add_api_route(
         "/clients",

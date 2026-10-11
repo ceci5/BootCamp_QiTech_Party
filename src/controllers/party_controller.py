@@ -1,7 +1,7 @@
 from connectors import BureauConnector
 from controllers.base_controller import BaseController
 from dtos import PartyDTO
-from errors import DuplicatedPartyDocument, InvalidPartyDocument, PartyNotFound
+from errors import DuplicatedPartyDocument, InvalidPartyDocument, PartyNotFound, PartyNotVerifiable
 from models import PartyStatus
 from repositories import PartyRepository
 from utils.document_number import CPF_LENGTH, is_valid_cnpj, is_valid_cpf
@@ -67,6 +67,39 @@ class PartyController(BaseController):
 
         return party_dto
 
+    def verify(self, party_key: str, actor: str) -> dict:
+        """A repescagem: pergunta de novo ao bureau por uma parte que ficou pending.
+
+        Mesmo desenho do `create`, e pelo mesmo motivo (sumário C2; 01b
+        §0.5): nunca se chama o bureau com transação aberta. A conferência
+        do estado é uma transação só de leitura, fechada com commit ANTES da
+        chamada; o desfecho, se houver, é a segunda transação, a mesma
+        `_apply_bureau_result` do cadastro — que relê com trava e só grava
+        se a parte ainda estiver pending (sumário L14).
+
+        O que atravessa a chamada é o dicionário de resposta e o documento,
+        nunca o objeto do banco: depois do commit ele está expirado, e ler um
+        atributo dele abriria uma transação que ficaria aberta durante a
+        espera inteira.
+
+        O `actor` não vai para o evento: quem decide a transição é o bureau
+        (06 §1, sumário C5).
+        """
+        self.logger.debug(f"Repescando a parte de chave {party_key}")
+
+        party_dto, document_number = self._check_verifiable(party_key)
+
+        bureau_result = self.bureau_connector.verify(document_number)
+
+        if bureau_result is not None:
+            party_dto = self._apply_bureau_result(party_key, bureau_result)
+
+        # Quem pediu fica aqui, e não no evento (sumário C5). O trace_id da
+        # linha (RequestIdFilter) é o mesmo do evento, se houve transição.
+        self.logger.info(f"Repescagem da parte {party_key} pedida por {actor}: {party_dto['status']}")
+
+        return party_dto
+
     def get_by_key(self, party_key: str) -> dict:
         self.logger.debug(f"Buscando a parte de chave {party_key}")
 
@@ -88,6 +121,31 @@ class PartyController(BaseController):
         self.session.commit()
 
         return party_dto
+
+    def _check_verifiable(self, party_key: str) -> tuple:
+        """A primeira transação da repescagem: só leitura, e o commit que a fecha.
+
+        As recusas vêm aqui, antes do bureau: parte que não existe, ou que
+        já saiu de pending. Nesses casos a exceção sobe sem commit, e o
+        session_manager desfaz a transação (não há o que desfazer).
+
+        A primeira consulta abre a transação (a sessão tem autobegin); o
+        commit é o que a fecha antes de o bureau ser chamado. A resposta e o
+        documento saem em variáveis comuns, lidos ANTES do commit.
+        """
+        party = self.party_repository.get_by_key(party_key)
+
+        if party is None:
+            raise PartyNotFound(party_key)
+
+        if party.status.enumerator != PartyStatus.PENDING:
+            raise PartyNotVerifiable(party_key, party.status.enumerator)
+
+        party_dto = PartyDTO.obj_to_creation_dict(party)
+        document_number = party.document_number
+        self.session.commit()
+
+        return party_dto, document_number
 
     def _apply_bureau_result(self, party_key: str, bureau_result: str) -> dict:
         """A segunda transação: o desfecho do bureau, se a parte ainda espera por ele.

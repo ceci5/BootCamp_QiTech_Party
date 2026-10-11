@@ -104,3 +104,12 @@ class PayloadGenerator:
             "actor": actor,
         }
         return payload
+
+    @staticmethod
+    def create_party_verification_payload(actor: str = None) -> dict:
+        """Um pedido de repescagem valido (spec 06 §8): so o `actor` do guia §5."""
+        if actor is None:
+            actor = "erp-alfa"
+
+        payload = {"actor": actor}
+        return payload
