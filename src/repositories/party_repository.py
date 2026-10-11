@@ -24,7 +24,18 @@ class PartyRepository:
         self.session = context.db_session
 
     def get_by_key(self, party_key: str) -> Party:
-        return self.session.query(Party).filter(Party.party_key == party_key).first()
+        """A parte desta chave, ou None.
+
+        A coluna é CHAR(36), e no Postgres o CHAR ignora espaços no fim ao
+        comparar: "<chave> " acharia a parte. A busca segue pelo índice, e
+        a conferência exata é aqui, em Python (revisão de 2026-10-11).
+        """
+        party = self.session.query(Party).filter(Party.party_key == party_key).first()
+
+        if party is not None and party.party_key != party_key:
+            return None
+
+        return party
 
     def get_by_document_number(self, document_number: str) -> Party:
         """A parte deste documento, ou None. A UNIQUE garante no máximo uma."""

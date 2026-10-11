@@ -55,6 +55,19 @@ class TestPartyGet:
         assert response["code"] == "QIT002001"
         assert NOT_FOUND_PARTY_KEY in response["description"]
 
+    @pytest.mark.parametrize("suffix", [" ", "  "], ids=["um_espaco", "dois_espacos"])
+    def test_get_party_chave_com_espaco_no_fim_devolve_404(self, suffix):
+        """A coluna é CHAR(36), e o CHAR do Postgres ignora espaços no fim
+        ao comparar: sem a conferência exata, a plataforma respondia 200
+        (revisão de 2026-10-11). O mock cai no pega-tudo e dá 404."""
+        party_key = PLATFORM_PARTY_KEY + suffix
+
+        status, response = RequestGenerator.GET_party(party_key)
+
+        assert status == 404
+        assert set(response.keys()) == ERROR_FIELDS
+        assert response["code"] == "QIT002001"
+
     def test_get_party_plataforma_semeada(self):
         """A plataforma nasce com o banco (database.sql), não por POST.
 
