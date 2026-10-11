@@ -692,3 +692,35 @@ mesmo código.
 Este projeto é **MIT** — pode usar, copiar, modificar e levar para o seu
 portfólio, inclusive em trabalho pago. O único pedido é manter o arquivo
 `LICENSE` junto quando você distribuir o código.
+
+---
+
+## 9. Rodando a party-api
+
+Este repositório é o **Cadastro** (`party-api`), um dos três serviços do
+projeto. Ele atende em portas diferentes das que este README usa nas
+seções acima, porque os três serviços rodam lado a lado na mesma máquina.
+
+Aqui, o `.env` **não é opcional**. Antes do primeiro `docker compose up`:
+
+```bash
+cp .env.example .env
+docker compose up -d --wait
+```
+
+O fim do `.env.example` tem um bloco com os valores da party-api. Quando
+uma variável aparece duas vezes no arquivo, vale a de baixo.
+
+| O quê | Endereço |
+|---|---|
+| API | http://localhost:3001 |
+| Banco | `localhost:5433`, usuário, senha e banco `bootcamp` |
+| Mock do bureau (WireMock) | http://localhost:8081/__admin/mappings |
+
+Nos comandos `curl` das seções anteriores, troque `3000` por `3001`. O
+`pytest` não precisa de nada: ele lê o mesmo `.env` e já procura a API na
+3001 e o banco na 5433.
+
+Sem o `.env`, tudo sobe nas portas da base (API na 3000, banco na 5432) e
+os testes procuram lá também, mas essas não são as portas que os outros
+dois serviços usam para chamar o Cadastro.
