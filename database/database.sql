@@ -97,3 +97,22 @@ CREATE TRIGGER party_status_event_no_change
 CREATE TRIGGER party_status_event_no_truncate
     BEFORE TRUNCATE ON party_status_event
     FOR EACH STATEMENT EXECUTE FUNCTION append_only_guard();
+
+-- O cliente da plataforma (fatia 04): uma parte juridica que paga pelo
+-- servico. Sem estado proprio: o estado que vale e o da parte (06, item 3)
+CREATE TABLE client(
+    id                      SERIAL PRIMARY KEY,
+    client_key              CHAR(36) NOT NULL,
+    party_id                INTEGER NOT NULL REFERENCES party(id),
+    -- quanto do aluguel a plataforma cobra DESTA imobiliaria; paga por ela
+    platform_fee_percentage NUMERIC(7,4) NOT NULL,
+    created_at              TIMESTAMPTZ NOT NULL DEFAULT(NOW()),
+    UNIQUE(client_key),
+    UNIQUE(party_id),
+    CHECK (platform_fee_percentage >= 0 AND platform_fee_percentage < 100)
+);
+
+-- A plataforma tambem e cliente, com chave fixa que os tres conhecem
+INSERT INTO client (client_key, party_id, platform_fee_percentage)
+SELECT '9c9c9c9c-9c9c-49c9-89c9-9c9c9c9c9c9c', id, 0
+FROM party WHERE party_key = '99999999-9999-4999-8999-999999999999';

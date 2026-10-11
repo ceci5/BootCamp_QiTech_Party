@@ -1,5 +1,6 @@
 from tests.utils.requisition import BaseConnectorResponse
 from tests.utils.payload_generator import PayloadGenerator
+from tests.utils.random_generator import RandomGenerator
 from tests.utils.request_generator import RequestGenerator
 
 
@@ -33,3 +34,19 @@ class ObjectGenerator:
         assert status == 201
 
         return response
+
+    @staticmethod
+    def create_organization_party(ending: str = None) -> dict:
+        """Uma pessoa juridica criada por POST /parties (spec 04 §8).
+
+        Os valores sao os da Imobiliaria Alfa (00 §2). O `ending` escolhe o
+        desfecho do bureau mockado: sem ele, aprovada; "00", recusada; "99",
+        pending (o bureau nao responde).
+        """
+        party_payload = PayloadGenerator.create_party_payload(
+            name="Imobiliária Alfa",
+            document_number=RandomGenerator.generate_cnpj_digits(ending),
+            pix_key="financeiro@alfa.example",
+        )
+
+        return ObjectGenerator.create_party(party_payload)

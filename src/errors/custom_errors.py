@@ -151,3 +151,74 @@ class DuplicatedPartyDocument(QIException):
         description = "There is already a party with this document number."
         translation = "Já existe uma parte cadastrada com este documento."
         super().__init__(title, self.code, http_status, description, translation)
+
+
+class ClientNotFound(QIException):
+    """O cliente não existe. É o 404 que o Contrato traduz (01b §2), por
+    isso o texto é o mesmo do mock (clients-c404c404-404.json).
+
+    A descrição leva só a chave, nunca nome nem documento (D0008).
+    """
+
+    code = "QIT002005"
+
+    def __init__(self, client_key) -> None:
+        title = "Client not found"
+        http_status = 404
+        description = f"Client with key {client_key} was not found."
+        translation = f"O cliente com chave {client_key} não foi encontrado."
+        super().__init__(title, self.code, http_status, description, translation)
+
+
+class ClientMustBeOrganization(QIException):
+    """Só pessoa jurídica vira cliente da plataforma (guia §5).
+
+    422: a API leu o pedido, e uma pessoa física não pode ser cliente —
+    nem agora, nem depois, porque o tipo da parte não muda. A descrição
+    leva só a chave (D0008).
+    """
+
+    code = "QIT002006"
+
+    def __init__(self, party_key) -> None:
+        title = "Client must be an organization"
+        http_status = 422
+        description = f"Party with key {party_key} is not an organization."
+        translation = f"A parte com chave {party_key} não é pessoa jurídica."
+        super().__init__(title, self.code, http_status, description, translation)
+
+
+class PartyNotActive(QIException):
+    """A parte existe, é jurídica, e ainda não está ativa (pending) ou nunca
+    vai estar (rejected).
+
+    409: conflito com o estado em que a parte está. A descrição leva a
+    chave e o estado, nunca nome nem documento (D0008).
+    """
+
+    code = "QIT002008"
+
+    def __init__(self, party_key, status) -> None:
+        title = "Party is not active"
+        http_status = 409
+        description = f"Party with key {party_key} is {status}, not active."
+        translation = f"A parte com chave {party_key} não está ativa."
+        super().__init__(title, self.code, http_status, description, translation)
+
+
+class PartyAlreadyClient(QIException):
+    """A parte já é cliente da plataforma: uma por parte (RFC).
+
+    409: o pedido está certo em si, e o que impede é o que já está no
+    banco. Quem decide é a UNIQUE(party_id) da tabela client, não uma
+    consulta antes do INSERT (sumário L6). A descrição leva só a chave.
+    """
+
+    code = "QIT002007"
+
+    def __init__(self, party_key) -> None:
+        title = "Party is already a client"
+        http_status = 409
+        description = f"Party with key {party_key} is already a client."
+        translation = f"A parte com chave {party_key} já é cliente."
+        super().__init__(title, self.code, http_status, description, translation)

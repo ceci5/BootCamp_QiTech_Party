@@ -1,2 +1,3 @@
 from repositories.sample_entity_repository import SampleEntityRepository
 from repositories.party_repository import PartyRepository
+from repositories.client_repository import ClientRepository

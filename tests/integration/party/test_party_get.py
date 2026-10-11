@@ -68,3 +68,19 @@ class TestPartyGet:
         assert response["party_type"] == "organization"
         assert response["status"] == "active"
         assert response["pix_key"] == "plataforma@example.com"
+
+    def test_get_party_plataforma_devolve_client_key(self):
+        """A plataforma é cliente dela mesma (fatia 04): o GET da parte diz qual.
+
+        O corpo inteiro é comparado com o do mock (00 §2), que é o que o
+        Contrato e o Ledger esperam desta chave.
+        """
+        status, response = RequestGenerator.GET_party(PLATFORM_PARTY_KEY)
+        assert status == 200
+        assert response == {
+            "party_key": PLATFORM_PARTY_KEY,
+            "party_type": "organization",
+            "status": "active",
+            "pix_key": "plataforma@example.com",
+            "client_key": "9c9c9c9c-9c9c-49c9-89c9-9c9c9c9c9c9c",
+        }

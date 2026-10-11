@@ -81,3 +81,26 @@ class PayloadGenerator:
             "actor": actor,
         }
         return payload
+
+    @staticmethod
+    def create_client_payload(
+        party_key: str,
+        platform_fee_percentage: str = None,
+        actor: str = None,
+    ) -> dict:
+        """Um pedido de cliente valido (spec 04 §8), com os valores do guia §5.
+
+        O percentual vai como string, nunca numero (01b §0.3).
+        """
+        if platform_fee_percentage is None:
+            platform_fee_percentage = "1.0000"
+
+        if actor is None:
+            actor = "comercial"
+
+        payload = {
+            "party_key": party_key,
+            "platform_fee_percentage": platform_fee_percentage,
+            "actor": actor,
+        }
+        return payload

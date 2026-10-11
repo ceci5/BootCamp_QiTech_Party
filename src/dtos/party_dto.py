@@ -18,9 +18,11 @@ class PartyDTO:
         dto["party_type"] = PartyDTO.party_type(party)
         dto["status"] = party.status.enumerator
         dto["pix_key"] = party.pix_key
-        # Quem diz se a parte é cliente da plataforma é a fatia 04 (tabela
-        # client). Até lá, nenhuma parte é.
+        # A chave do cliente da plataforma que esta parte é, ou null se não
+        # for (01b §1). No máximo um cliente por parte (tabela client).
         dto["client_key"] = None
+        if party.client is not None:
+            dto["client_key"] = party.client.client_key
 
         return dto
 

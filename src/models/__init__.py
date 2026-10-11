@@ -4,3 +4,4 @@ from models.sample_entity_status_event import SampleEntityStatusEvent
 from models.party_status import PartyStatus
 from models.party import Party
 from models.party_status_event import PartyStatusEvent
+from models.client import Client

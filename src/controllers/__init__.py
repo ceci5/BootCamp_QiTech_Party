@@ -1,2 +1,3 @@
 from controllers.sample_entity_controller import SampleEntityController
 from controllers.party_controller import PartyController
+from controllers.client_controller import ClientController

@@ -11,6 +11,7 @@ from middlewares import (
 )
 from resources import HealthCheckResource, SampleEntityResource
 from resources import PartyResource
+from resources import ClientResource
 from utils.logger import setup_logging
 
 
@@ -126,6 +127,7 @@ def create_app() -> FastAPI:
     health_check_resource = HealthCheckResource()
     sample_entity_resource = SampleEntityResource()
     party_resource = PartyResource()
+    client_resource = ClientResource()
 
     application.add_api_route("/", health_check_resource.on_get_home, methods=["GET"])
     application.add_api_route(
@@ -168,6 +170,17 @@ def create_app() -> FastAPI:
     application.add_api_route(
         "/parties/{party_key}",
         party_resource.on_get_by_key,
+        methods=["GET"],
+    )
+
+    application.add_api_route(
+        "/clients",
+        client_resource.on_post,
+        methods=["POST"],
+    )
+    application.add_api_route(
+        "/clients/{client_key}",
+        client_resource.on_get_by_key,
         methods=["GET"],
     )
 

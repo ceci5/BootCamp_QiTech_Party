@@ -35,5 +35,9 @@ class Party(Base):
         order_by="asc(PartyStatusEvent.id)",
     )
 
+    # O cliente da plataforma que esta parte é, se for (fatia 04): no
+    # máximo um, pela UNIQUE(party_id) da tabela client.
+    client = relationship("Client", back_populates="party", uselist=False, lazy="selectin")
+
     INDIVIDUAL = "individual"
     ORGANIZATION = "organization"

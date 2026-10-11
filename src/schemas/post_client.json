@@ -1,0 +1,25 @@
+{
+  "title": "PostClient",
+  "type": "object",
+  "properties": {
+    "party_key": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "platform_fee_percentage": {
+      "type": "string",
+      "pattern": "^[0-9]{1,2}(\\.[0-9]{1,4})?$"
+    },
+    "actor": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    }
+  },
+  "required": [
+    "party_key",
+    "platform_fee_percentage",
+    "actor"
+  ],
+  "additionalProperties": false
+}
