@@ -79,12 +79,16 @@ class TestClientCreate:
         assert party_key in response["description"]
         assert RequestGenerator.GET_party(party_key)[1]["client_key"] is None
 
-    @pytest.mark.parametrize("ending", ["99", "00"], ids=["pj_pending", "pj_rejected"])
-    def test_post_clients_parte_nao_active_devolve_409(self, ending):
+    @pytest.mark.parametrize(
+        "ending, expected_status",
+        [("99", "pending"), ("00", "rejected")],
+        ids=["pj_pending", "pj_rejected"],
+    )
+    def test_post_clients_parte_nao_active_devolve_409(self, ending, expected_status):
         """Só pessoa jurídica ativa vira cliente: pending (o bureau não
         respondeu) e rejected ficam de fora, com 409 e nada gravado."""
         party = ObjectGenerator.create_organization_party(ending)
-        assert party["status"] != "active"
+        assert party["status"] == expected_status
 
         status, response = RequestGenerator.POST_client(
             PayloadGenerator.create_client_payload(party["party_key"])
