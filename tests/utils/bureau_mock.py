@@ -19,8 +19,9 @@ class BureauMock:
     """Fala direto com o bureau-mock (WireMock), sem passar pela API.
 
     O `ClientRequisition` monta a URL pela API_PORT e não alcança a 8081.
-    Serve para provar os mappings do bureau e para zerar o scenario
-    `bureau-instavel` (documento terminado em 98) antes de quem o usa.
+    Serve para provar os mappings do bureau e para zerar os scenarios
+    `bureau-instavel` (documento terminado em 98) e `bureau-instavel-recusa`
+    (em 97) antes de quem os usa.
     """
 
     @staticmethod
