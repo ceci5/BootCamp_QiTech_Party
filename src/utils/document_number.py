@@ -62,3 +62,65 @@ def is_valid_cpf(document_number: str) -> bool:
             return False
 
     return True
+
+
+# ────────────────────────────────────────────────────────────────────
+# CNPJ — acrescentado pela party-api (D0010, emenda; guia §14)
+# ────────────────────────────────────────────────────────────────────
+CNPJ_LENGTH = 14
+
+# Os pesos de cada um dos dois dígitos verificadores do CNPJ. Ao
+# contrário do CPF, eles não decrescem em linha reta: vão de 5 (ou 6) até
+# 2 e recomeçam em 9.
+CNPJ_FIRST_WEIGHTS = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
+CNPJ_SECOND_WEIGHTS = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
+
+
+def is_valid_cnpj(document_number: str) -> bool:
+    """Diz se um CNPJ existe de verdade — a mesma pergunta do is_valid_cpf.
+
+    O schema da party-api já cobrou o formato: catorze dígitos, sem
+    máscara. Aqui é a conta: os dois últimos dígitos são o RESULTADO de
+    uma soma ponderada dos anteriores, e um número que erra a conta não é
+    CNPJ de ninguém. Por isso a recusa é 422, não 400.
+
+    A regra do resto é a mesma do CPF: resto menor que 2 vira dígito 0;
+    nos outros casos, o dígito é 11 menos o resto. O que muda são os pesos,
+    na lista lá em cima.
+    """
+    digits = []
+    for character in document_number:
+        if character.isdigit():
+            digits.append(int(character))
+
+    if len(digits) != CNPJ_LENGTH:
+        return False
+
+    # Como no CPF: catorze dígitos iguais passam na conta e não valem.
+    all_digits_are_equal = True
+    for digit in digits:
+        if digit != digits[0]:
+            all_digits_are_equal = False
+            break
+
+    if all_digits_are_equal:
+        return False
+
+    for weights in [CNPJ_FIRST_WEIGHTS, CNPJ_SECOND_WEIGHTS]:
+        position = len(weights)
+        total = 0
+
+        for index in range(position):
+            total = total + digits[index] * weights[index]
+
+        remainder = total % 11
+
+        if remainder < 2:
+            expected_digit = 0
+        else:
+            expected_digit = 11 - remainder
+
+        if digits[position] != expected_digit:
+            return False
+
+    return True

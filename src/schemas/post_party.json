@@ -1,0 +1,31 @@
+{
+  "title": "PostParty",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "document_number": {
+      "type": "string",
+      "pattern": "^([0-9]{11}|[0-9]{14})$"
+    },
+    "pix_key": {
+      "type": "string",
+      "maxLength": 77,
+      "pattern": "^([^@\\s]+@[^@\\s]+|\\+55[0-9]{10,11}|[0-9]{11}|[0-9]{14}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$"
+    },
+    "actor": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    }
+  },
+  "required": [
+    "name",
+    "document_number",
+    "actor"
+  ],
+  "additionalProperties": false
+}

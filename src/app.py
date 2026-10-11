@@ -10,6 +10,7 @@ from middlewares import (
     register_session_manager_middleware,
 )
 from resources import HealthCheckResource, SampleEntityResource
+from resources import PartyResource
 from utils.logger import setup_logging
 
 
@@ -124,6 +125,7 @@ def create_app() -> FastAPI:
     # atende cada endereço, e mais nada.
     health_check_resource = HealthCheckResource()
     sample_entity_resource = SampleEntityResource()
+    party_resource = PartyResource()
 
     application.add_api_route("/", health_check_resource.on_get_home, methods=["GET"])
     application.add_api_route(
@@ -155,6 +157,17 @@ def create_app() -> FastAPI:
     application.add_api_route(
         "/sample_entities",
         sample_entity_resource.on_get_list,
+        methods=["GET"],
+    )
+
+    application.add_api_route(
+        "/parties",
+        party_resource.on_post,
+        methods=["POST"],
+    )
+    application.add_api_route(
+        "/parties/{party_key}",
+        party_resource.on_get_by_key,
         methods=["GET"],
     )
 

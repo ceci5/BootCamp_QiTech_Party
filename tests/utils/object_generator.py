@@ -23,3 +23,13 @@ class ObjectGenerator:
         assert status == 202
 
         return response
+
+    @staticmethod
+    def create_party(party_payload: dict = None) -> dict:
+        if party_payload is None:
+            party_payload = PayloadGenerator.create_party_payload()
+
+        status, response = RequestGenerator.POST_party(party_payload)
+        assert status == 201
+
+        return response

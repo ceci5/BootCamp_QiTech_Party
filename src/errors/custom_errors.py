@@ -99,3 +99,55 @@ class InvalidBirthdate(QIException):
         description = f"The birthdate {birthdate} is not a real date."
         translation = "A data de nascimento informada não existe."
         super().__init__(title, self.code, http_status, description, translation)
+
+
+class PartyNotFound(QIException):
+    """A parte não existe. É o 404 que o Contrato e o Ledger traduzem
+    (01b §1), por isso o texto é o mesmo do mock (spec 02 §3.5).
+
+    A descrição leva só a chave, nunca nome nem documento (D0008).
+    """
+
+    code = "QIT002001"
+
+    def __init__(self, party_key) -> None:
+        title = "Party not found"
+        http_status = 404
+        description = f"Party with key {party_key} was not found."
+        translation = f"A parte com chave {party_key} não foi encontrada."
+        super().__init__(title, self.code, http_status, description, translation)
+
+
+class InvalidPartyDocument(QIException):
+    """Só dígitos, tamanho certo, e os dígitos verificadores não batem.
+
+    422, como o InvalidDocumentNumber da sample_entity: a API leu e o valor
+    é que não pode existir. A descrição não repete o documento (D0008).
+    """
+
+    code = "QIT002002"
+
+    def __init__(self) -> None:
+        title = "Invalid party document"
+        http_status = 422
+        description = "The document number is not a valid CPF or CNPJ."
+        translation = "O documento informado não é um CPF nem um CNPJ válido."
+        super().__init__(title, self.code, http_status, description, translation)
+
+
+class DuplicatedPartyDocument(QIException):
+    """Já existe uma parte com este documento.
+
+    409: o pedido está certo em si, e o que impede é o que já está no
+    banco. Quem decide é a UNIQUE da tabela, não uma consulta antes do
+    INSERT (sumário L6). A descrição não repete o documento (D0008).
+    """
+
+    code = "QIT002003"
+
+    def __init__(self) -> None:
+        title = "Party document already registered"
+        http_status = 409
+        description = "There is already a party with this document number."
+        translation = "Já existe uma parte cadastrada com este documento."
+        super().__init__(title, self.code, http_status, description, translation)

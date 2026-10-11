@@ -58,3 +58,22 @@ class BureauMock:
     @staticmethod
     def mappings_total() -> int:
         return BureauMock._send("GET", "/__admin/mappings").response_json["meta"]["total"]
+
+    @staticmethod
+    def received_request_ids(document_number: str) -> list:
+        """O X-Request-ID de cada POST /verifications que o mock recebeu com este documento.
+
+        Lê o diário de requisições do WireMock. Serve para provar duas
+        coisas: que a API chamou o bureau, e que mandou o mesmo
+        identificador que devolveu ao cliente (01b §0.1).
+        """
+        request_pattern = {
+            "method": "POST",
+            "url": "/verifications",
+            "bodyPatterns": [
+                {"matchesJsonPath": {"expression": "$.document_number", "equalTo": document_number}}
+            ],
+        }
+        response = BureauMock._send("POST", "/__admin/requests/find", request_pattern)
+
+        return [logged["headers"].get("X-Request-ID") for logged in response.response_json["requests"]]
