@@ -50,3 +50,15 @@ class ObjectGenerator:
         )
 
         return ObjectGenerator.create_party(party_payload)
+
+    @staticmethod
+    def create_client(party_key: str, platform_fee_percentage: str = None) -> dict:
+        """Um cliente criado por POST /clients para uma parte que ja existe."""
+        client_payload = PayloadGenerator.create_client_payload(
+            party_key, platform_fee_percentage=platform_fee_percentage
+        )
+
+        status, response = RequestGenerator.POST_client(client_payload)
+        assert status == 201
+
+        return response

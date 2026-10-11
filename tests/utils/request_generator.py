@@ -104,3 +104,17 @@ class RequestGenerator:
             headers={"INTERNAL-TOKEN": INTERNAL_TOKEN},
         )
         return response.response_status, response.response_json
+
+    @staticmethod
+    def GET_party_with_request_id(party_key: str, request_id: str) -> tuple:
+        """Como o GET_party, com X-Request-ID; devolve também o da resposta (01b §0.1)."""
+        headers = {"INTERNAL-TOKEN": INTERNAL_TOKEN, "X-Request-ID": request_id}
+        response = ClientRequisition.send("GET", f"/parties/{party_key}", headers=headers)
+        return response.response_status, response.response_json, response.response.headers.get("X-Request-ID")
+
+    @staticmethod
+    def GET_client_with_request_id(client_key: str, request_id: str) -> tuple:
+        """Como o GET_client, com X-Request-ID; devolve também o da resposta (01b §0.1)."""
+        headers = {"INTERNAL-TOKEN": INTERNAL_TOKEN, "X-Request-ID": request_id}
+        response = ClientRequisition.send("GET", f"/clients/{client_key}", headers=headers)
+        return response.response_status, response.response_json, response.response.headers.get("X-Request-ID")
