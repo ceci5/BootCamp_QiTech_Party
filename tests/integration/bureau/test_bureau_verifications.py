@@ -35,5 +35,16 @@ class TestBureauVerifications:
         assert response is None
         assert elapsed >= 2
 
+    def test_verifications_final_98_falha_uma_vez_e_aprova(self):
+        assert BureauMock.reset_scenarios() == 200
+
+        status, response = BureauMock.POST_verifications("12345678998", timeout=TEST_TIMEOUT)
+        assert status is None
+
+        for _ in range(2):
+            status, response = BureauMock.POST_verifications("12345678998", timeout=TEST_TIMEOUT)
+            assert status == 200
+            assert response == {"result": "approved"}
+
     def test_verifications_mock_carrega_os_cinco_mappings(self):
         assert BureauMock.mappings_total() == 5

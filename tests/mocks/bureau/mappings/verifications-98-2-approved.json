@@ -1,0 +1,26 @@
+{
+  "scenarioName": "bureau-instavel",
+  "requiredScenarioState": "recuperado",
+  "priority": 1,
+  "request": {
+    "method": "POST",
+    "urlPath": "/verifications",
+    "bodyPatterns": [
+      {
+        "matchesJsonPath": {
+          "expression": "$.document_number",
+          "matches": "^\\d*98$"
+        }
+      }
+    ]
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "result": "approved"
+    }
+  }
+}
