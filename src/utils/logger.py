@@ -1,4 +1,5 @@
 import logging
+import re
 import sys
 
 from constants import APP_ENV, SERVICE_NAME
@@ -34,6 +35,54 @@ class RequestIdFilter(logging.Filter):
         return True
 
 
+# Um CPF (11 dígitos) ou um CNPJ (14) solto na linha: nem colado a outro
+# dígito antes, nem depois. O primeiro grupo é o que some; o segundo, os dois
+# últimos dígitos, fica. Com 11 dígitos casa 9 + 2; com 14, o 9 + 2 esbarra
+# no dígito seguinte e o regex tenta 12 + 2.
+DOCUMENT_NUMBER_PATTERN = re.compile(r"(?<![0-9])([0-9]{9}|[0-9]{12})([0-9]{2})(?![0-9])")
+
+
+def mask_document_numbers(text: str) -> str:
+    """Troca cada dígito escondido por `*`: 12345678909 vira *********09."""
+    return DOCUMENT_NUMBER_PATTERN.sub(lambda match: "*" * len(match.group(1)) + match.group(2), text)
+
+
+class DocumentMaskFilter(logging.Filter):
+    """Mascara CPF e CNPJ em toda linha de log (D0008; sumário C3; guia §14).
+
+    O request_logger grava a query string, e a busca por documento
+    (GET /parties?document_number=) poria o documento ali em texto puro. Em
+    vez de mexer no middleware, este filtro reescreve a linha antes de ela
+    sair: a mensagem, os argumentos dela (o log de acesso do uvicorn monta
+    a linha a partir de uma tupla de argumentos, e a tupla precisa manter o
+    tamanho) e o texto da exceção.
+
+    O `exc_text` é preenchido aqui porque o Formatter só o preencheria
+    DEPOIS dos filtros, já sem máscara.
+
+    Como o RequestIdFilter, ele nunca descarta nada: devolve True sempre.
+    O preço: qualquer número solto de 11 ou 14 dígitos sai mascarado, seja
+    ou não um documento.
+    """
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if isinstance(record.msg, str):
+            record.msg = mask_document_numbers(record.msg)
+
+        if isinstance(record.args, tuple):
+            record.args = tuple(
+                mask_document_numbers(arg) if isinstance(arg, str) else arg for arg in record.args
+            )
+
+        if record.exc_info and not record.exc_text:
+            record.exc_text = logging.Formatter().formatException(record.exc_info)
+
+        if record.exc_text:
+            record.exc_text = mask_document_numbers(record.exc_text)
+
+        return True
+
+
 def setup_logging() -> None:
     """Liga o log da aplicação. Chamada uma vez, quando a API sobe."""
     level = logging.INFO
@@ -48,6 +97,7 @@ def setup_logging() -> None:
     # ou de qualquer biblioteca. Se ficasse num logger só, a primeira
     # linha vinda de outro lugar derrubaria a formatação.
     handler.addFilter(RequestIdFilter())
+    handler.addFilter(DocumentMaskFilter())
 
     root_logger = logging.getLogger()
     root_logger.setLevel(level)
@@ -57,6 +107,12 @@ def setup_logging() -> None:
     # detalhes de conexao HTTP das bibliotecas que usamos.
     for biblioteca_falante in ["urllib3"]:
         logging.getLogger(biblioteca_falante).setLevel(logging.CRITICAL)
+
+    # O uvicorn escreve pelos próprios loggers, com handler próprio e sem
+    # propagar até a raiz: o filtro do handler acima não os alcança, e a
+    # linha de acesso traz a query string inteira (spec 07, P1).
+    logging.getLogger("uvicorn.access").addFilter(DocumentMaskFilter())
+    logging.getLogger("uvicorn.error").addFilter(DocumentMaskFilter())
 
 
 def get_logger(class_name: str) -> logging.Logger:
