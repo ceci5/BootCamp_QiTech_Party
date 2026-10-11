@@ -267,6 +267,12 @@ class TestContrato01bGetParty:
         assert response["code"] == "QIT002001"
         assert request_id == EXAMPLE_REQUEST_ID
 
+    def test_get_party_real_devolve_o_content_type_do_mock(self):
+        """CA-13: o Content-Type que o CA-02 confere no mock é o que a API real devolve."""
+        status, _, content_type = RequestGenerator.GET_party_with_content_type(PLATFORM_PARTY_KEY)
+        assert status == 200
+        assert content_type == mock_response(f"/parties/{PLATFORM_PARTY_KEY}")["headers"]["Content-Type"]
+
 
 class TestContrato01bGetClient:
     def test_get_client_plataforma_igual_ao_mock(self):
@@ -313,3 +319,9 @@ class TestContrato01bGetClient:
         validate(response, ERROR_RESPONSE)
         assert response["code"] == "QIT002005"
         assert request_id == EXAMPLE_REQUEST_ID
+
+    def test_get_client_real_devolve_o_content_type_do_mock(self):
+        """CA-14: o Content-Type do mapping de cliente é o que a API real devolve."""
+        status, _, content_type = RequestGenerator.GET_client_with_content_type(PLATFORM_CLIENT_KEY)
+        assert status == 200
+        assert content_type == mock_response(f"/clients/{PLATFORM_CLIENT_KEY}")["headers"]["Content-Type"]

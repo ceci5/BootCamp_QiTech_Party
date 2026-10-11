@@ -54,7 +54,7 @@ class RequestGenerator:
         return response.response_status, response.response_json
 
     @staticmethod
-    def POST_party(party_payload: dict) -> BaseConnectorResponse:
+    def POST_party(party_payload: dict) -> tuple:
         response = ClientRequisition.send(
             "POST",
             "/parties",
@@ -78,7 +78,7 @@ class RequestGenerator:
         return response.response_status, response.response_json, response.response.headers.get("X-Request-ID")
 
     @staticmethod
-    def GET_party(party_key: str) -> BaseConnectorResponse:
+    def GET_party(party_key: str) -> tuple:
         response = ClientRequisition.send(
             "GET",
             f"/parties/{party_key}",
@@ -87,7 +87,7 @@ class RequestGenerator:
         return response.response_status, response.response_json
 
     @staticmethod
-    def POST_client(client_payload: dict) -> BaseConnectorResponse:
+    def POST_client(client_payload: dict) -> tuple:
         response = ClientRequisition.send(
             "POST",
             "/clients",
@@ -97,7 +97,7 @@ class RequestGenerator:
         return response.response_status, response.response_json
 
     @staticmethod
-    def GET_client(client_key: str) -> BaseConnectorResponse:
+    def GET_client(client_key: str) -> tuple:
         response = ClientRequisition.send(
             "GET",
             f"/clients/{client_key}",
@@ -120,7 +120,19 @@ class RequestGenerator:
         return response.response_status, response.response_json, response.response.headers.get("X-Request-ID")
 
     @staticmethod
-    def POST_party_verification(party_key: str, verification_payload: dict) -> BaseConnectorResponse:
+    def GET_party_with_content_type(party_key: str) -> tuple:
+        """Como o GET_party; devolve também o Content-Type da resposta (spec 05, CA-13)."""
+        response = ClientRequisition.send("GET", f"/parties/{party_key}", headers={"INTERNAL-TOKEN": INTERNAL_TOKEN})
+        return response.response_status, response.response_json, response.response.headers.get("Content-Type")
+
+    @staticmethod
+    def GET_client_with_content_type(client_key: str) -> tuple:
+        """Como o GET_client; devolve também o Content-Type da resposta (spec 05, CA-14)."""
+        response = ClientRequisition.send("GET", f"/clients/{client_key}", headers={"INTERNAL-TOKEN": INTERNAL_TOKEN})
+        return response.response_status, response.response_json, response.response.headers.get("Content-Type")
+
+    @staticmethod
+    def POST_party_verification(party_key: str, verification_payload: dict) -> tuple:
         """Repescagem do bureau (spec 06). Com `verification_payload=None`, vai sem corpo."""
         response = ClientRequisition.send(
             "POST",
@@ -148,9 +160,8 @@ class RequestGenerator:
         )
         return response.response_status, response.response_json, response.response.headers.get("X-Request-ID")
 
-    # -> BaseConnectorResponse é a assinatura herdada de GET_sample_entities; devolve tupla (status, json), como todo o arquivo.
     @staticmethod
-    def GET_parties(params: dict = None) -> BaseConnectorResponse:
+    def GET_parties(params: dict = None) -> tuple:
         """Busca por documento (spec 07): `params` vira a query string."""
         response = ClientRequisition.send(
             "GET", "/parties", headers={"INTERNAL-TOKEN": INTERNAL_TOKEN}, query_params=params
