@@ -147,3 +147,12 @@ class RequestGenerator:
             "POST", f"/parties/{party_key}/verification", payload=verification_payload, headers=headers
         )
         return response.response_status, response.response_json, response.response.headers.get("X-Request-ID")
+
+    # -> BaseConnectorResponse é a assinatura herdada de GET_sample_entities; devolve tupla (status, json), como todo o arquivo.
+    @staticmethod
+    def GET_parties(params: dict = None) -> BaseConnectorResponse:
+        """Busca por documento (spec 07): `params` vira a query string."""
+        response = ClientRequisition.send(
+            "GET", "/parties", headers={"INTERNAL-TOKEN": INTERNAL_TOKEN}, query_params=params
+        )
+        return response.response_status, response.response_json

@@ -1,3 +1,4 @@
+from fastapi import Request
 from fastapi import status as http_status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
@@ -34,6 +35,23 @@ class PartyResource:
 
         return JSONResponse(
             content=jsonable_encoder(party),
+            status_code=http_status.HTTP_200_OK,
+        )
+
+    @SchemaHandler.validate_query_params("get_parties.json")
+    def on_get_list(self, request: Request) -> JSONResponse:
+        """A busca por documento (spec 07): zero ou uma parte.
+
+        O decorator já conferiu a query contra o get_parties.json, e o
+        schema exige o document_number: por isso o acesso direto, sem
+        `.get`. O envelope `data` é montado aqui, como no
+        SampleEntityResource.on_get_list.
+        """
+        controller = PartyController()
+        parties_list = controller.get_list(request.query_params["document_number"])
+
+        return JSONResponse(
+            content=jsonable_encoder({"data": parties_list}),
             status_code=http_status.HTTP_200_OK,
         )
 

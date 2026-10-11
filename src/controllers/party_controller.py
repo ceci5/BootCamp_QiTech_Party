@@ -110,6 +110,26 @@ class PartyController(BaseController):
 
         return PartyDTO.obj_to_dict(party)
 
+    def get_list(self, document_number: str) -> list:
+        """A busca por documento: zero ou um item, nunca erro (spec 07).
+
+        Documento sem parte devolve lista vazia, e não 404: a pergunta "quem
+        tem este documento?" tem resposta, e a resposta é "ninguém". Os
+        dígitos verificadores não são conferidos: um documento inválido
+        nunca foi gravado, então a lista sai vazia do mesmo jeito (RN-03).
+
+        Só lê: nenhum commit, nenhum evento, nenhum bureau.
+        """
+        self.logger.debug("Buscando a parte por documento")
+
+        party = self.party_repository.get_by_document_number(document_number)
+
+        parties_list = []
+        if party is not None:
+            parties_list.append(party)
+
+        return PartyDTO.list_obj_to_list_dict(parties_list)
+
     def _register_pending(self, party_data: dict) -> dict:
         """A primeira transação: a parte e o evento de nascimento, e o commit."""
         party = self.party_repository.create_pending(party_data, get_request_id())

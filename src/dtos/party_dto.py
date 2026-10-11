@@ -1,3 +1,5 @@
+from typing import List
+
 from models import Party
 from utils.document_number import CPF_LENGTH
 
@@ -35,6 +37,28 @@ class PartyDTO:
         dto["status"] = party.status.enumerator
 
         return dto
+
+    @staticmethod
+    def obj_to_simplified_dict(party: Party) -> dict:
+        """O item da busca por documento: só a chave e o estado (guia §5).
+
+        Quem busca já tem o documento; o que lhe falta é a chave. Nada
+        mais sai (D0008).
+        """
+        dto = dict()
+        dto["party_key"] = party.party_key
+        dto["status"] = party.status.enumerator
+
+        return dto
+
+    @staticmethod
+    def list_obj_to_list_dict(parties_list: List[Party]) -> List[dict]:
+        parties_dict_list = []
+
+        for party in parties_list:
+            parties_dict_list.append(PartyDTO.obj_to_simplified_dict(party))
+
+        return parties_dict_list
 
     @staticmethod
     def party_type(party: Party) -> str:

@@ -1,0 +1,14 @@
+{
+  "title": "GetParties",
+  "type": "object",
+  "properties": {
+    "document_number": {
+      "type": "string",
+      "pattern": "^([0-9]{11}|[0-9]{14})$"
+    }
+  },
+  "required": [
+    "document_number"
+  ],
+  "additionalProperties": false
+}

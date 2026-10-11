@@ -26,6 +26,10 @@ class PartyRepository:
     def get_by_key(self, party_key: str) -> Party:
         return self.session.query(Party).filter(Party.party_key == party_key).first()
 
+    def get_by_document_number(self, document_number: str) -> Party:
+        """A parte deste documento, ou None. A UNIQUE garante no máximo uma."""
+        return self.session.query(Party).filter(Party.document_number == document_number).first()
+
     def get_status(self, enumerator: str) -> PartyStatus:
         return self.session.query(PartyStatus).filter(PartyStatus.enumerator == enumerator).one()
 
