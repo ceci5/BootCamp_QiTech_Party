@@ -787,3 +787,10 @@ O que o Cadastro **não** faz, de propósito (também na RFC):
 - a máscara do log esconde só 11 ou 14 dígitos seguidos: um documento
   formatado (com ponto ou traço) na query string chega ao log como veio.
   O schema o recusa, mas a linha de entrada é gravada antes.
+
+### O `-1` do `database.sql`
+
+`git diff --numstat` contra a base mostra `database/database.sql` com uma
+linha removida. Não é nada da base que saiu: o arquivo original termina em
+`);` sem quebra de linha, e o acréscimo das tabelas do Cadastro reescreve
+essa última linha com a quebra. As linhas de antes continuam iguais.
