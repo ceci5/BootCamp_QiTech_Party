@@ -109,6 +109,17 @@ class TestPartySearch:
         assert status == 400, f"a query {params!r} foi aceita"
         assert response["code"] == "QIT000001"
 
+    def test_get_parties_documento_com_quebra_de_linha_no_fim_devolve_400(self):
+        """Um `\\n` no fim não passa no schema (PAR-01).
+
+        O `$` do `re` do Python casa antes de um `\\n` final; sem o
+        `(?!\\n)`, a busca respondia 200 com lista vazia.
+        """
+        status, response = RequestGenerator.GET_parties({"document_number": PLATFORM_DOCUMENT_NUMBER + "\n"})
+
+        assert status == 400
+        assert response["code"] == "QIT000001"
+
     def test_get_parties_sem_internal_token_devolve_403(self):
         """A busca por documento não é pública (spec 07, CA-06, RN-01)."""
         response = ClientRequisition.send(

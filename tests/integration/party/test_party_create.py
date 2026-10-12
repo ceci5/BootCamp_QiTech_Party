@@ -129,6 +129,32 @@ class TestPartyCreate:
         assert status == 400, f"o campo '{field}' aceitou o valor {value!r}"
         assert response["code"] == "QIT000001"
 
+    @pytest.mark.parametrize(
+        "field, value",
+        [
+            ("document_number", RandomGenerator.generate_cpf_digits() + "\n"),
+            ("document_number", RandomGenerator.generate_cnpj_digits() + "\n"),
+            ("pix_key", "a@b\n"),
+        ],
+        ids=["documento_cpf", "documento_cnpj", "pix_key"],
+    )
+    def test_post_parties_quebra_de_linha_no_fim_devolve_400(self, field, value):
+        """Um `\\n` no fim não passa no schema (PAR-01).
+
+        O `$` do `re` do Python casa antes de um `\\n` final: sem o
+        `(?!\\n)`, o CNPJ com `\\n` virava 500, o CPF 422, e a chave pix
+        era gravada com a quebra de linha. Nada pode chegar ao banco.
+        """
+        payload = PayloadGenerator.create_party_payload()
+        payload[field] = value
+
+        status, response = RequestGenerator.POST_party(payload)
+
+        assert status == 400, f"o campo '{field}' aceitou o valor {value!r}"
+        assert response["code"] == "QIT000001"
+        for document_number in {payload["document_number"], payload["document_number"].rstrip("\n")}:
+            assert DbUtils.count_parties_by_document(document_number) == 0
+
     def test_post_parties_pj_aprovada_fica_active(self):
         """CU-P2: a pessoa jurídica segue o mesmo caminho, com o tipo organization."""
         payload = PayloadGenerator.create_party_payload(

@@ -191,6 +191,31 @@ class TestClientCreate:
         assert status == 400, f"o campo '{field}' aceitou o valor {value!r}"
         assert response["code"] == "QIT000001"
 
+    @pytest.mark.parametrize(
+        "field",
+        ["party_key", "platform_fee_percentage"],
+        ids=["party_key", "percentual"],
+    )
+    def test_post_clients_quebra_de_linha_no_fim_devolve_400(self, field):
+        """Um `\\n` no fim não passa no schema (PAR-01).
+
+        O `$` do `re` do Python casa antes de um `\\n` final. A parte é
+        uma PJ ativa de verdade; a prova de que nada foi gravado é que o
+        mesmo pedido, sem o `\\n`, ainda cria o cliente (e não dá 409).
+        """
+        party_key = ObjectGenerator.create_organization_party()["party_key"]
+        payload = PayloadGenerator.create_client_payload(party_key)
+        valid_payload = dict(payload)
+        payload[field] = payload[field] + "\n"
+
+        status, response = RequestGenerator.POST_client(payload)
+
+        assert status == 400, f"o campo '{field}' aceitou o valor {payload[field]!r}"
+        assert response["code"] == "QIT000001"
+
+        status, response = RequestGenerator.POST_client(valid_payload)
+        assert status == 201
+
     def test_post_clients_percentual_sai_com_quatro_casas(self):
         """O percentual sai com quatro casas mesmo que entre sem elas (01b §0.3).
 

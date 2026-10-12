@@ -4,11 +4,11 @@
   "properties": {
     "party_key": {
       "type": "string",
-      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}(?!\\n)$"
     },
     "platform_fee_percentage": {
       "type": "string",
-      "pattern": "^[0-9]{1,2}(\\.[0-9]{1,4})?$"
+      "pattern": "^[0-9]{1,2}(\\.[0-9]{1,4})?(?!\\n)$"
     },
     "actor": {
       "type": "string",
