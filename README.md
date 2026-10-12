@@ -724,3 +724,66 @@ Nos comandos `curl` das seções anteriores, troque `3000` por `3001`. O
 Sem o `.env`, tudo sobe nas portas da base (API na 3000, banco na 5432) e
 os testes procuram lá também, mas essas não são as portas que os outros
 dois serviços usam para chamar o Cadastro.
+
+---
+
+## 10. O que a party-api acrescenta
+
+A especificação deste serviço é a RFC do projeto,
+[`rfc-conta-com-proposito.md`](https://github.com/DavidSatAg/bootcamp-qi-tech-docs/blob/main/docs/rfc/rfc-conta-com-proposito.md)
+(seção "Rotas", bloco **Cadastro**). O porquê de cada peça acrescentada à
+base está no
+[guia da party-api, §14](https://github.com/DavidSatAg/bootcamp-qi-tech-docs/blob/main/docs/guias/guia-party-api.md#14-acréscimos-à-base--as-quatro-linhas-de-cada-um).
+
+### As 6 rotas
+
+Todas exigem o `INTERNAL-TOKEN`. As que mudam estado exigem `actor` no
+corpo.
+
+| Verbo | Rota | O que faz | Respostas |
+|---|---|---|---|
+| `POST` | `/parties` | Cadastra pessoa física ou jurídica e consulta o bureau depois do commit | `201` (`active`, `rejected` ou `pending`); `400`; `409 QIT002003`; `422 QIT002002` |
+| `GET` | `/parties/{party_key}` | Tipo, estado, chave Pix e se é cliente — sem nome e sem documento | `200`; `404 QIT002001` |
+| `GET` | `/parties?document_number=` | Acha a parte pelo documento (recuperação depois de um timeout) | `200` com zero ou um item; `400` |
+| `POST` | `/parties/{party_key}/verification` | Repescagem do bureau, idempotente | `200`; `400`; `404 QIT002001`; `409 QIT002004` |
+| `POST` | `/clients` | Torna uma pessoa jurídica cliente e fixa o percentual da plataforma | `201`; `400`; `404 QIT002001`; `409 QIT002007`; `409 QIT002008`; `422 QIT002006` |
+| `GET` | `/clients/{client_key}` | Cliente, parte e percentual da plataforma | `200`; `404 QIT002005` |
+
+### Os 8 códigos do Cadastro
+
+Somam-se aos da §7, no mesmo formato de erro.
+
+| Código | HTTP | Quando acontece |
+|---|---|---|
+| `QIT002001` | 404 | a parte não existe |
+| `QIT002002` | 422 | o documento não é um CPF nem um CNPJ válido (dígitos verificadores) |
+| `QIT002003` | 409 | o documento já está cadastrado |
+| `QIT002004` | 409 | a verificação só vale para parte `pending` |
+| `QIT002005` | 404 | o cliente não existe |
+| `QIT002006` | 422 | só pessoa jurídica vira cliente |
+| `QIT002007` | 409 | a parte já é cliente |
+| `QIT002008` | 409 | a parte não está `active` |
+
+### Os acréscimos à base
+
+Cada peça acrescentada tem suas quatro linhas (princípio tocado, por que
+não funciona sem, por que é a menor, o que não faz) no guia da party-api,
+§14, linkado acima: `flake8`, o `bureau-mock` do compose, o bloco de
+portas do `.env.example`, os métodos novos de `tests/utils/db_utils.py`,
+`is_valid_cnpj`, `BureauConnector`, `DocumentMaskFilter`, `BureauMock`
+(`tests/utils/bureau_mock.py`), `PartyApiMocks`
+(`tests/utils/party_api_mocks.py`) e o `extra_hosts` do serviço `api`.
+
+### Os limites
+
+O que o Cadastro **não** faz, de propósito (também na RFC):
+
+- não há `PUT /parties/{key}/pix_key`: a chave Pix só se fixa no cadastro;
+- `rejected` é terminal;
+- não há estado `inactive` nem transição de saída de `active`;
+- o `actor` de `POST /clients` vai só para o log, sem coluna no banco;
+- uma `pix_key` de 11 ou 14 dígitos (CPF ou CNPJ usado como chave) expõe
+  o documento em `GET /parties/{key}`;
+- a máscara do log esconde só 11 ou 14 dígitos seguidos: um documento
+  formatado (com ponto ou traço) na query string chega ao log como veio.
+  O schema o recusa, mas a linha de entrada é gravada antes.
